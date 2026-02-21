@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Tax Regime — Classification Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2433;
+    --border: #2a3145;
+    --accent: #f5a623;
+    --accent2: #4fd1c5;
+    --green: #48bb78;
+    --red: #fc8181;
+    --text: #e8ecf4;
+    --muted: #6b7799;
+    --old: #7c6fff;
+    --new: #f5a623;
+    --exempt: #4fd1c5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .logo-text h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .score-board {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .divider {
+    width: 1px; height: 36px;
+    background: var(--border);
+  }
+
+  /* Level selector */
+  .level-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .level-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .level-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .level-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+  /* Round info */
+  .round-info {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .round-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .round-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 4px;
+    max-width: 500px;
+    line-height: 1.5;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .progress-bar {
+    width: 120px; height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* Drop zones */
+  .drop-zones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .drop-zone {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    min-height: 200px;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(245,166,35,0.06);
+    transform: scale(1.01);
+  }
+
+  .drop-zone-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .zone-badge {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .zone-old .zone-badge { background: rgba(124,111,255,0.15); }
+  .zone-new .zone-badge { background: rgba(245,166,35,0.15); }
+  .zone-both .zone-badge { background: rgba(79,209,197,0.15); }
+  .zone-neither .zone-badge { background: rgba(107,119,153,0.15); }
+
+  .zone-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .zone-old .zone-name { color: var(--old); }
+  .zone-new .zone-name { color: var(--new); }
+  .zone-both .zone-name { color: var(--exempt); }
+  .zone-neither .zone-name { color: var(--muted); }
+
+  .zone-subtitle {
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 1px;
+  }
+
+  .zone-items {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 60px;
+  }
+
+  .zone-empty {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    padding: 16px 0;
+    opacity: 0.5;
+  }
+
+  /* Cards */
+  .cards-pool {
+    margin-bottom: 28px;
+  }
+
+  .cards-pool-label {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  .card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  .card-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Placed card (inside drop zone) */
+  .placed-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: grab;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .placed-card:hover { border-color: rgba(255,255,255,0.2); }
+
+  .placed-card .remove-btn {
+    font-size: 0.65rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+
+  .placed-card .remove-btn:hover { background: var(--red); color: white; }
+
+  .placed-card.correct { border-color: var(--green); background: rgba(72,187,120,0.1); }
+  .placed-card.incorrect { border-color: var(--red); background: rgba(252,129,129,0.1); }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #e8961a; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* Result panel */
+  .result-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+
+  .result-panel.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .result-emoji { font-size: 1.8rem; }
+
+  .result-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+
+  .result-subtitle {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .breakdown-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    border-left: 3px solid transparent;
+  }
+
+  .breakdown-item.ok { border-color: var(--green); }
+  .breakdown-item.wrong { border-color: var(--red); }
+
+  .breakdown-label {
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .breakdown-detail {
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+  }
+
+  /* Info tooltip */
+  .info-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .info-title {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .info-item {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .info-item span {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .drop-zones { grid-template-columns: 1fr 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">₹</div>
+      <div class="logo-text">
+        <h1>India Tax Regime Game</h1>
+        <p>Classification Challenge for Finance Professionals</p>
+      </div>
+    </div>
+    <div class="score-board">
+      <div class="stat">
+        <div class="stat-val" id="scoreVal">0</div>
+        <div class="stat-label">Score</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-val" id="streakVal">0</div>
+        <div class="stat-label">Streak 🔥</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-val" id="roundVal">1</div>
+        <div class="stat-label">Round</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="level-bar">
+    <button class="level-btn active" data-level="0">Round 1: Deductions</button>
+    <button class="level-btn" data-level="1">Round 2: Exemptions</button>
+    <button class="level-btn" data-level="2">Round 3: Slab Rates</button>
+    <button class="level-btn" data-level="3">Round 4: Mixed Bag</button>
+  </div>
+
+  <div id="infoSection" class="info-section">
+    <div class="info-title">📚 Quick Reference</div>
+    <div class="info-grid" id="infoGrid"></div>
+  </div>
+
+  <div class="round-info">
+    <div>
+      <div class="round-title" id="roundTitle"></div>
+      <div class="round-desc" id="roundDesc"></div>
+    </div>
+    <div class="progress-wrap">
+      <span id="progressText">0/0</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div id="dropZones" class="drop-zones"></div>
+
+  <div class="cards-pool">
+    <div class="cards-pool-label">→ Drag cards into the correct category</div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="checkBtn">Check Answers</button>
+    <button class="btn btn-ghost" id="resetBtn">Reset Round</button>
+    <button class="btn btn-ghost" id="nextBtn" disabled>Next Round →</button>
+  </div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="result-header">
+      <div class="result-emoji" id="resultEmoji"></div>
+      <div>
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-subtitle" id="resultSubtitle"></div>
+      </div>
+    </div>
+    <div class="result-breakdown" id="resultBreakdown"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ROUNDS = [
+  {
+    title: "Round 1: Deductions — Old vs New Regime",
+    desc: "Under the New Tax Regime (u/s 115BAC), most deductions are disallowed. Drag each item to whether it's available under Old Regime only, New Regime only, or Both.",
+    zones: [
+      { id: "old", label: "Old Regime Only", icon: "🏛️", cls: "zone-old" },
+      { id: "new", label: "New Regime Only", icon: "✨", cls: "zone-new" },
+      { id: "both", label: "Available in Both", icon: "⚖️", cls: "zone-both" },
+    ],
+    info: [
+      { label: "Old Regime", detail: "Allows most deductions (80C, HRA, LTA, etc.) with higher slab rates" },
+      { label: "New Regime (default FY25)", detail: "Lower slab rates but disallows most Chap VI-A deductions" },
+      { label: "Standard Deduction", detail: "₹75,000 now available in BOTH regimes from FY 2024-25" },
+      { label: "NPS Employer", detail: "Employer's NPS contribution u/s 80CCD(2) allowed in BOTH" },
+    ],
+    cards: [
+      { id:"c1", text:"Section 80C", sub:"PF, ELSS, LIC (up to ₹1.5L)", answer:"old" },
+      { id:"c2", text:"House Rent Allowance (HRA)", sub:"u/s 10(13A)", answer:"old" },
+      { id:"c3", text:"Leave Travel Allowance (LTA)", sub:"u/s 10(5)", answer:"old" },
+      { id:"c4", text:"Standard Deduction", sub:"₹75,000 from FY 2024-25", answer:"both" },
+      { id:"c5", text:"80D — Health Insurance", sub:"Self, family, parents", answer:"old" },
+      { id:"c6", text:"Interest on Home Loan", sub:"u/s 24(b) — Self-occupied", answer:"old" },
+      { id:"c7", text:"80CCD(2) — Employer NPS", sub:"Up to 14% of basic (govt)", answer:"both" },
+      { id:"c8", text:"80E — Education Loan Interest", sub:"Higher education", answer:"old" },
+      { id:"c9", text:"Section 80TTA/80TTB", sub:"Savings/Senior citizen interest", answer:"old" },
+    ]
+  },
+  {
+    title: "Round 2: Exempt or Taxable?",
+    desc: "Some incomes are fully exempt, some partially exempt, and some fully taxable. Categorize each income correctly.",
+    zones: [
+      { id: "exempt", label: "Fully Exempt", icon: "🟢", cls: "zone-old" },
+      { id: "partial", label: "Partially Exempt", icon: "🟡", cls: "zone-both" },
+      { id: "taxable", label: "Fully Taxable", icon: "🔴", cls: "zone-new" },
+    ],
+    info: [
+      { label: "Gratuity", detail: "Exempt up to ₹20L for private employees; fully exempt for govt" },
+      { label: "Leave Encashment", detail: "Fully exempt on retirement for govt; up to ₹25L for others" },
+      { label: "VRS Compensation", detail: "Exempt up to ₹5L u/s 10(10C)" },
+      { label: "PPF Interest", detail: "Fully exempt u/s 10(11)" },
+    ],
+    cards: [
+      { id:"e1", text:"PPF Interest", sub:"Public Provident Fund", answer:"exempt" },
+      { id:"e2", text:"Agricultural Income", sub:"From farming in India", answer:"exempt" },
+      { id:"e3", text:"Gratuity (Private Employee)", sub:"Up to ₹20L limit", answer:"partial" },
+      { id:"e4", text:"HRA Received", sub:"Partial exemption based on formula", answer:"partial" },
+      { id:"e5", text:"FD Interest", sub:"Bank fixed deposit", answer:"taxable" },
+      { id:"e6", text:"Dividend Income", sub:"From domestic companies", answer:"taxable" },
+      { id:"e7", text:"Leave Encashment (Retirement)", sub:"Non-govt employee up to ₹25L", answer:"partial" },
+      { id:"e8", text:"Life Insurance Maturity", sub:"Policy > ₹5L premium — Sec 10(10D)", answer:"partial" },
+      { id:"e9", text:"Lottery Winnings", sub:"u/s 115BB", answer:"taxable" },
+    ]
+  },
+  {
+    title: "Round 3: Slab Rate — New Regime FY 2024-25",
+    desc: "Budget 2024 revised the New Regime slabs. Match each income range to its correct tax rate under the New Tax Regime.",
+    zones: [
+      { id: "nil", label: "NIL (0%)", icon: "🎯", cls: "zone-both" },
+      { id: "low", label: "5% — 10%", icon: "📉", cls: "zone-old" },
+      { id: "mid", label: "15% — 20%", icon: "📊", cls: "zone-new" },
+      { id: "high", label: "25% — 30%", icon: "📈", cls: "zone-neither" },
+    ],
+    info: [
+      { label: "₹0 – ₹3L", detail: "NIL" },
+      { label: "₹3L – ₹7L", detail: "5%" },
+      { label: "₹7L – ₹10L", detail: "10%" },
+      { label: "₹10L – ₹12L", detail: "15%" },
+      { label: "₹12L – ₹15L", detail: "20%" },
+      { label: "Above ₹15L", detail: "30%" },
+    ],
+    cards: [
+      { id:"s1", text:"₹0 – ₹3,00,000", sub:"Basic exemption limit", answer:"nil" },
+      { id:"s2", text:"₹3,00,001 – ₹7,00,000", sub:"After rebate u/s 87A up to ₹7L = NIL tax", answer:"low" },
+      { id:"s3", text:"₹7,00,001 – ₹10,00,000", sub:"New regime slab", answer:"low" },
+      { id:"s4", text:"₹10,00,001 – ₹12,00,000", sub:"New regime slab", answer:"mid" },
+      { id:"s5", text:"₹12,00,001 – ₹15,00,000", sub:"New regime slab", answer:"mid" },
+      { id:"s6", text:"Above ₹15,00,000", sub:"New regime top slab", answer:"high" },
+    ]
+  },
+  {
+    title: "Round 4: Mixed Bag — Capital Gains",
+    desc: "After Budget 2024, capital gains tax rates changed significantly. Classify each asset/holding combination to its LTCG or STCG rate.",
+    zones: [
+      { id: "stcg15", label: "STCG @ 20%", icon: "⚡", cls: "zone-new", subtitle:"Listed equity / equity MF < 12 months" },
+      { id: "ltcg10", label: "LTCG @ 12.5%", icon: "📦", cls: "zone-old", subtitle:"Listed equity > 12 months, above ₹1.25L" },
+      { id: "slab", label: "As Per Slab", icon: "📋", cls: "zone-both", subtitle:"Property/debt < 24 months" },
+      { id: "ltcg20", label: "LTCG @ 20% (Indexed)", icon: "🏠", cls: "zone-neither", subtitle:"Property ≥ 24 months (pre-July 2024)" },
+    ],
+    info: [
+      { label: "Budget 2024 Change", detail: "STCG on listed equity raised to 20% (was 15%). LTCG raised to 12.5% (was 10%). Indexation removed for property from July 23, 2024" },
+      { label: "LTCG Exemption", detail: "₹1.25L exemption per year on listed equity LTCG (raised from ₹1L)" },
+      { label: "Unlisted Shares LTCG", detail: "20% with indexation after 24 months" },
+      { label: "Debt MF", detail: "Taxed at slab rate regardless of holding period" },
+    ],
+    cards: [
+      { id:"g1", text:"Listed Equity Shares", sub:"Held for 8 months", answer:"stcg15" },
+      { id:"g2", text:"Listed Equity Mutual Fund", sub:"Held for 18 months, gain > ₹1.25L", answer:"ltcg10" },
+      { id:"g3", text:"Residential Property", sub:"Sold after 3 years (acquired before July 2024)", answer:"ltcg20" },
+      { id:"g4", text:"Debt Mutual Fund", sub:"Held for 2 years (post March 2023 rule)", answer:"slab" },
+      { id:"g5", text:"Equity Shares", sub:"Held for 14 months, gain ₹80,000", answer:"ltcg10", note:"Below ₹1.25L — but still LTCG rate applies; exempt since under limit" },
+      { id:"g6", text:"Residential Property", sub:"Sold after 18 months", answer:"slab" },
+      { id:"g7", text:"Index Fund (Equity)", sub:"Held for 6 months", answer:"stcg15" },
+    ]
+  }
+];
+
+let currentRound = 0;
+let score = 0;
+let streak = 0;
+let placedItems = {}; // zoneId -> [cardIds]
+let checked = false;
+
+function init() {
+  renderRound(0);
+  document.querySelectorAll('.level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const l = parseInt(btn.dataset.level);
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentRound = l;
+      checked = false;
+      renderRound(l);
+      document.getElementById('nextBtn').disabled = true;
+      document.getElementById('resultPanel').classList.remove('show');
+    });
+  });
+  document.getElementById('checkBtn').addEventListener('click', checkAnswers);
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    checked = false;
+    renderRound(currentRound);
+    document.getElementById('resultPanel').classList.remove('show');
+    document.getElementById('nextBtn').disabled = true;
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    const next = (currentRound + 1) % ROUNDS.length;
+    document.querySelectorAll('.level-btn').forEach((b,i) => b.classList.toggle('active', i === next));
+    currentRound = next;
+    checked = false;
+    renderRound(next);
+    document.getElementById('nextBtn').disabled = true;
+    document.getElementById('resultPanel').classList.remove('show');
+  });
+}
+
+function renderRound(idx) {
+  const round = ROUNDS[idx];
+  document.getElementById('roundTitle').textContent = round.title;
+  document.getElementById('roundDesc').textContent = round.desc;
+  document.getElementById('roundVal').textContent = idx + 1;
+
+  // Info
+  const infoGrid = document.getElementById('infoGrid');
+  infoGrid.innerHTML = round.info.map(i =>
+    `<div class="info-item"><span>${i.label}</span>: ${i.detail}</div>`
+  ).join('');
+
+  // Init placed
+  placedItems = {};
+  round.zones.forEach(z => placedItems[z.id] = []);
+
+  renderZones(round);
+  renderCards(round);
+  updateProgress(round);
+}
+
+function renderZones(round) {
+  const container = document.getElementById('dropZones');
+  container.innerHTML = round.zones.map(zone => `
+    <div class="drop-zone ${zone.cls}" id="zone-${zone.id}" data-zone="${zone.id}">
+      <div class="drop-zone-header">
+        <div class="zone-badge">${zone.icon}</div>
+        <div>
+          <div class="zone-name">${zone.label}</div>
+          ${zone.subtitle ? `<div class="zone-subtitle">${zone.subtitle}</div>` : ''}
+        </div>
+      </div>
+      <div class="zone-items" id="items-${zone.id}">
+        <div class="zone-empty">Drop items here</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Drag events on zones
+  container.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const cardId = e.dataTransfer.getData('cardId');
+      const fromZone = e.dataTransfer.getData('fromZone');
+      const targetZone = zone.dataset.zone;
+      if (fromZone === targetZone) return;
+      moveCard(cardId, fromZone || null, targetZone);
+    });
+  });
+}
+
+function renderCards(round) {
+  const grid = document.getElementById('cardsGrid');
+  const placedAll = Object.values(placedItems).flat();
+  const remaining = round.cards.filter(c => !placedAll.includes(c.id));
+  grid.innerHTML = remaining.map(card => `
+    <div class="card" id="card-${card.id}" draggable="true" data-card="${card.id}">
+      ${card.text}
+      ${card.sub ? `<div class="card-amount">${card.sub}</div>` : ''}
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('cardId', el.dataset.card);
+      e.dataTransfer.setData('fromZone', '');
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+  });
+
+  // Pool as drop target (to return cards)
+  grid.parentElement.addEventListener('dragover', e => e.preventDefault());
+  grid.parentElement.addEventListener('drop', e => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('cardId');
+    const fromZone = e.dataTransfer.getData('fromZone');
+    if (fromZone) moveCard(cardId, fromZone, null);
+  });
+}
+
+function moveCard(cardId, fromZone, toZone) {
+  if (fromZone) {
+    placedItems[fromZone] = placedItems[fromZone].filter(id => id !== cardId);
+  }
+  if (toZone) {
+    if (!placedItems[toZone].includes(cardId)) {
+      placedItems[toZone].push(cardId);
+    }
+  }
+  refreshZones();
+  refreshPool();
+  updateProgress(ROUNDS[currentRound]);
+}
+
+function getCard(id) {
+  return ROUNDS[currentRound].cards.find(c => c.id === id);
+}
+
+function refreshZones() {
+  ROUNDS[currentRound].zones.forEach(zone => {
+    const container = document.getElementById(`items-${zone.id}`);
+    const ids = placedItems[zone.id];
+    if (ids.length === 0) {
+      container.innerHTML = '<div class="zone-empty">Drop items here</div>';
+      return;
+    }
+    container.innerHTML = ids.map(id => {
+      const card = getCard(id);
+      const cls = checked ? (card.answer === zone.id ? 'correct' : 'incorrect') : '';
+      return `<div class="placed-card ${cls}" draggable="true" data-card="${id}" data-zone="${zone.id}">
+        <span>${card.text}</span>
+        <span class="remove-btn" data-card="${id}" data-zone="${zone.id}">✕</span>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('.placed-card').forEach(el => {
+      el.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('cardId', el.dataset.card);
+        e.dataTransfer.setData('fromZone', el.dataset.zone);
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    });
+
+    container.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        moveCard(btn.dataset.card, btn.dataset.zone, null);
+      });
+    });
+  });
+}
+
+function refreshPool() {
+  renderCards(ROUNDS[currentRound]);
+}
+
+function updateProgress(round) {
+  const total = round.cards.length;
+  const placed = Object.values(placedItems).flat().length;
+  document.getElementById('progressText').textContent = `${placed}/${total}`;
+  document.getElementById('progressFill').style.width = `${(placed/total)*100}%`;
+}
+
+function checkAnswers() {
+  const round = ROUNDS[currentRound];
+  const total = round.cards.length;
+  const placed = Object.values(placedItems).flat().length;
+
+  if (placed < total) {
+    showToast('⚠️ Place all cards before checking!', 'error');
+    return;
+  }
+
+  checked = true;
+  let correct = 0;
+  const breakdown = [];
+
+  round.cards.forEach(card => {
+    const placedIn = Object.entries(placedItems).find(([z, ids]) => ids.includes(card.id));
+    const zone = placedIn ? placedIn[0] : null;
+    const isCorrect = zone === card.answer;
+    if (isCorrect) correct++;
+    const correctZone = round.zones.find(z => z.id === card.answer);
+    breakdown.push({ card, isCorrect, yourZone: zone, correctZone: correctZone?.label });
+  });
+
+  // Update score
+  const gained = correct * 10 + (correct === total ? 20 : 0); // bonus for perfect
+  score += gained;
+  streak = correct === total ? streak + 1 : 0;
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('streakVal').textContent = streak;
+
+  // Show result
+  const pct = Math.round((correct/total)*100);
+  const emoji = pct === 100 ? '🏆' : pct >= 70 ? '✅' : pct >= 40 ? '⚠️' : '❌';
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = `${correct}/${total} Correct — ${pct}%`;
+  document.getElementById('resultSubtitle').textContent = pct === 100
+    ? `Perfect round! +${gained} points (includes 20pt bonus)`
+    : `+${gained} points. Review the incorrect ones below.`;
+
+  document.getElementById('resultBreakdown').innerHTML = breakdown.map(b => `
+    <div class="breakdown-item ${b.isCorrect ? 'ok' : 'wrong'}">
+      <div class="breakdown-label">${b.isCorrect ? '✓' : '✗'} ${b.card.text}</div>
+      <div class="breakdown-detail">${b.isCorrect ? `Correctly placed in: ${b.correctZone}` : `Should be: ${b.correctZone}`}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('resultPanel').classList.add('show');
+  document.getElementById('nextBtn').disabled = false;
+  refreshZones();
+
+  showToast(pct === 100 ? '🏆 Perfect Score!' : `${correct}/${total} correct — ${gained}pts`, pct >= 70 ? 'success' : 'error');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>
